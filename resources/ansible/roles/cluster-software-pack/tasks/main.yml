@@ -1,0 +1,42 @@
+---
+
+- name: Install cluster-software-pack.
+  yum: state=present name="{{ item }}"
+  with_items:
+    - pacemaker 
+    - pcs 
+    - corosync
+    - psmisc 
+    - policycoreutils-python
+    
+  
+- name: Set hacluster password
+  user: name=hacluster password={{ hacluster_pw }}
+  
+- name: Start pcsd service
+  service: name=pcsd enabled=yes state=started
+  
+- name: Auth Clusters {{ server_active }} {{ server_passive }}
+  when: "{{ ansible_hostname }} == {{ server_active }}"
+  shell: pcs cluster auth {{ server_active }} {{ server_passive }} -u {{ pcs_user }} -p {{ hacluster_pw }}
+  
+- name: Creat Cluster and add ndes
+  when: "{{ ansible_hostname }} == {{ server_active }}"
+  shell: pcs cluster setup --name {{ cluster_name }} {{ server_active }} {{ server_passive }}
+  
+- name: Start Cluster
+  when: "{{ ansible_hostname }} == {{ server_active }}"
+  shell: pcs cluster start --all
+
+- name: Disabled Stonith
+  when: "{{ ansible_hostname }} == {{ server_active }}"
+  shell: pcs property set stonith-enabled=false
+  
+- name: Ignore low quorum.
+  when: "{{ ansible_hostname }} == {{ server_active }}"
+  shell: pcs property set no-quorum-policy=ignore
+  
+- name: Create virtual IP
+  when: "{{ ansible_hostname }} == {{ server_active }}"
+  shell: pcs resource create virtual_ip ocf:heartbeat:IPaddr2 ip={{ cluster_virtual_ip }} cidr_netmask=32 op monitor interval=30s
+ 

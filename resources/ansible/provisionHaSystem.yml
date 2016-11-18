@@ -1,0 +1,16 @@
+---
+# This is the main playbook what ansible will use for provisoning. 
+- hosts: ha-systems
+  become: yes
+  become_method: sudo
+  serial: 1
+  roles:
+    - add-hosts
+    - utils-tools
+    - jdk-8
+    - cluster-software-pack
+#    - jenkins # TODO Standard Install 
+#    - jenkins-cluster # TODO Config clustering 
+#    - jenkins-replication  # TODO Possibly gluster
+    
+    

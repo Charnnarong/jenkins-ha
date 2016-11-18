@@ -1,0 +1,19 @@
+---
+- name: Add repository.
+  yum: name=https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm state=present
+    
+- name: Install common utils.
+  yum: state=present name="{{ item }}"
+  with_items:
+    - vim
+    - jq-1.5-1.el7.x86_64
+    - mlocate
+    - mod_ssl
+    - net-tools
+  register: result
+
+- name: Update db
+  command: updatedb
+  when: result|succeeded
+
+

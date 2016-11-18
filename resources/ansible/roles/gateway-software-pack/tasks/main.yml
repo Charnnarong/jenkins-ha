@@ -1,0 +1,19 @@
+---
+- name: Add nginx repository.
+  yum_repository:
+    name: nginx repo
+    description: EPEL YUM repo
+    baseurl: http://nginx.org/packages/centos/$releasever/$basearch/
+    gpgcheck: no
+    enabled: yes
+    
+- name: Install cluster-software-pack.
+  yum: state=present name="{{ item }}"
+  with_items:
+    - nginx
+#    
+#- name: Start pcsd service
+#  service: name=pcsd enabled=yes state=started
+#  
+#- name: Set hacluster password
+#  user: name=hacluster password={{ hacluster_pw }}

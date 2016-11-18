@@ -1,0 +1,10 @@
+---
+- name: Add mappings to /etc/hosts
+  blockinfile:
+    dest: /etc/hosts
+    block: |
+      {{item.ip}} {{item.name}}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{item.name}}"
+  with_items: "{{ vms }}"
+
+- lineinfile: dest=/etc/hosts regexp='^127\.0\.0\.1.*{{ ansible_hostname }}' line='127.0.0.1 localhost'

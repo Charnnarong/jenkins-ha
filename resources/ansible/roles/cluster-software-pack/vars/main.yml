@@ -1,0 +1,5 @@
+---
+hacluster_pw: $5$/34508fSdfOuOd45$ULVR5RWiXDkP423VXfat/pnPrmJJlkVKFJSGLEI6EU8
+pcs_user: hacluster
+cluster_name: jenkins_cluster
+cluster_virtual_ip: 10.100.199.21

@@ -1,0 +1,23 @@
+---
+- name: Import jenkins key
+  rpm_key:
+    key: https://pkg.jenkins.io/redhat/jenkins.io.key
+    state: present
+    validate_certs: no
+
+- name: Get jenkins repo
+  get_url:
+    url: https://pkg.jenkins.io/redhat/jenkins.repo
+    dest: /etc/yum.repos.d/jenkins.repo
+
+- name: Install Jenkins for RedHat
+  yum: name=jenkins state=latest
+  register: jenkins_install
+  
+- name: Ensure jenkins is running
+  service:
+    name: jenkins
+    state: started
+
+- name: Start jenkins service
+  service: name=jenkins enabled=yes state=started
