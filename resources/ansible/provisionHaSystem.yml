@@ -3,7 +3,7 @@
 - hosts: ha-systems
   become: yes
   become_method: sudo
-  serial: 1
+  serial: "100%"
   roles:
     - add-hosts
     - utils-tools

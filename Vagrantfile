@@ -52,8 +52,8 @@ Vagrant.configure("2") do |config|
     d.vm.synced_folder ".vagrant", "/vagrants/pk", mount_options: ["dmode=700,fmode=600"]
     d.vm.provision :shell, path: "scripts/bootstrap_ansible.sh"
 
-    playbooks = [["/vagrant/resources/ansible/provisionHaSystem.yml","/vagrant/resources/ansible/hosts/haSystems"],
-                 ["/vagrant/resources/ansible/provisionGateway.yml","/vagrant/resources/ansible/hosts/gateway"]]
+    playbooks = [["/vagrant/resources/ansible/provisionHaSystem.yml","/vagrant/resources/ansible/hosts/haSystems.yml"],
+                 ["/vagrant/resources/ansible/provisionGateway.yml","/vagrant/resources/ansible/hosts/gateway.yml"]]
     playbooks.each { | (playbook,inventory) |
       d.vm.provision "ansible_local" do |ansible|
         ansible.playbook = "#{playbook}"
