@@ -23,6 +23,7 @@
 - name: Creat Cluster and add ndes
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
   shell: pcs cluster setup --name {{ cluster_name }} {{ server_active }} {{ server_passive }}
+  ignore_errors: yes
   
 - name: Start Cluster
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
@@ -39,4 +40,5 @@
 - name: Create virtual IP
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
   shell: pcs resource create virtual_ip ocf:heartbeat:IPaddr2 ip={{ cluster_virtual_ip }} cidr_netmask=32 op monitor interval=30s
+  ignore_errors: yes
  
