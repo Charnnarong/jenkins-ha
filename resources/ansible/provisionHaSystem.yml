@@ -9,6 +9,8 @@
     - utils-tools
     - jdk-8
     - cluster-software-pack
+    - httpd-server-cluster
+    - drdb
 #    - jenkins # TODO Standard Install 
 #    - jenkins-cluster # TODO Config clustering 
 #    - jenkins-replication  # TODO Possibly gluster

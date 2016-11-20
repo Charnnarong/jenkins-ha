@@ -10,6 +10,7 @@
     - mlocate
     - mod_ssl
     - net-tools
+    - wget
   register: result
 
 - name: Update db

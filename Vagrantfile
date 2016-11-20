@@ -1,6 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-required_plugins = %w(vagrant-vbguest)
+required_plugins = %w(vagrant-vbguest vagrant-persistent-storage)
 required_plugins.each do |plugin|
   system "vagrant plugin install #{plugin}" unless Vagrant.has_plugin? plugin
 end
@@ -19,6 +19,7 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  drdb_persistent_storage = 2048
   # Docker Node
   config.vm.define "centos-active" do |d|
     d.vm.box = "centos/7"
@@ -26,6 +27,13 @@ Vagrant.configure("2") do |config|
     d.vm.network "private_network" , ip: "10.100.199.20"
     d.vm.synced_folder "./resources", "/vagrant"
     d.vm.provision :shell, path: "scripts/passwordAuthentication.sh"
+    d.persistent_storage.enabled = true
+    d.persistent_storage.location = "centosactivevd.vdi"
+    d.persistent_storage.size = "#{drdb_persistent_storage}"
+    d.persistent_storage.mountname = 'jenkinsdata'
+    d.persistent_storage.filesystem = 'ext4'
+    d.persistent_storage.mountpoint = '/var/lib/jenkinsdata'
+    d.persistent_storage.volgroupname = 'VolGroup00'
     d.vm.provider "virtualbox" do |v|
       v.memory = 2048
     end
@@ -38,6 +46,13 @@ Vagrant.configure("2") do |config|
     d.vm.network "private_network" , ip: "10.100.199.30"
     d.vm.synced_folder "./resources", "/vagrant"
     d.vm.provision :shell, path: "scripts/passwordAuthentication.sh"
+    d.persistent_storage.enabled = true
+    d.persistent_storage.location = "centospassivevd.vdi"
+    d.persistent_storage.size = "#{drdb_persistent_storage}"
+    d.persistent_storage.mountname = 'jenkinsdata'
+    d.persistent_storage.filesystem = 'ext4'
+    d.persistent_storage.mountpoint = '/var/lib/jenkinsdata'
+    d.persistent_storage.volgroupname = 'VolGroup00'
     d.vm.provider "virtualbox" do |v|
       v.memory = 2048
     end

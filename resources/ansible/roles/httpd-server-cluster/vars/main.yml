@@ -1,0 +1,9 @@
+---
+
+directories:
+  - /var/www/html/
+
+web_files: [
+  { src: 'status.conf', dest: '/etc/httpd/conf.d/status.conf', mode: '0644' }  
+]
+

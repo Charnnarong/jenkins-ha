@@ -1,0 +1,53 @@
+---
+
+- name: Install cluster-software-pack.
+  yum: name=httpd state=latest
+  
+#- name: Directories are created ( Already created by httd installation.) 
+#  file:
+#    path: "{{ item }}"
+#    state: directory
+#  with_items: directories
+
+- name: Files are copied
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ web_files }}"
+  
+- template: src=index.html.j2 dest=/var/www/html/index.html owner=vagrant group=vagrant mode=0644
+
+- name: Config cluster.
+  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
+  shell: pcs resource create WebSite ocf:heartbeat:apache \
+         configfile=/etc/httpd/conf/httpd.conf \
+         statusurl="http://localhost/server-status" \
+         op monitor interval=1min
+  ignore_errors: yes
+  
+- name: Increae operation timeout to 2 mins
+  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
+  shell: pcs resource op defaults timeout=240s
+  
+- name: Make WebSite and ClusterIP running on the same location.
+  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
+  shell: pcs constraint colocation add WebSite with ClusterIP INFINITY
+  ignore_errors: yes
+  
+- name: Ensure Resource start and stop in the same order.
+  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
+  shell: pcs constraint order ClusterIP then WebSite
+  ignore_errors: yes
+  
+# Skip this task if we don't perfer any particular node to run our app.
+# In this example, we pretended active server has more power than the passive one. 
+- name: Prefer to run server on {{ server_active }}
+  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
+  shell: pcs constraint location WebSite prefers {{ server_active }}=INFINITY
+  
+  
+
+
+
+  
