@@ -1,10 +1,12 @@
 server_active: centos-active
 server_passive: centos-passive
+server_active_host: 10.100.199.20
+server_passive_host: 10.100.199.30
 
 vms: [
       { name: centos-gateway, ip: 10.100.199.10 },
-      { name: "{{ server_active }}", ip: 10.100.199.20 },
-      { name: "{{ server_passive }}", ip: 10.100.199.30 }
+      { name: "{{ server_active }}", ip: "{{ server_active_host }}" },
+      { name: "{{ server_passive }}", ip: "{{ server_passive_host }}" }
      ]
      
 

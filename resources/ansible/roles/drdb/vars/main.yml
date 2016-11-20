@@ -1,0 +1,12 @@
+---
+drdb_device: /dev/drbd1
+drdb_storage_size: 256M
+drdb_storage_name: drbd-demo
+drdb_storage_port: 7789
+
+pcs_drdb_resource_name: WebData
+drdb_resource_name: wwwdata
+
+files: [
+  { src: 'drbd.conf', dest: '/etc/modules-load.d/drbd.conf', mode: '0644' }  
+]

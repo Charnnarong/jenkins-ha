@@ -42,9 +42,9 @@
   
 # Skip this task if we don't perfer any particular node to run our app.
 # In this example, we pretended active server has more power than the passive one. 
-- name: Prefer to run server on {{ server_active }}
-  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
-  shell: pcs constraint location WebSite prefers {{ server_active }}=INFINITY
+#- name: Prefer to run server on {{ server_active }}
+#  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
+#  shell: pcs constraint location WebSite prefers {{ server_active }}=INFINITY
   
   
 

@@ -27,6 +27,8 @@ Vagrant.configure("2") do |config|
     d.vm.network "private_network" , ip: "10.100.199.20"
     d.vm.synced_folder "./resources", "/vagrant"
     d.vm.provision :shell, path: "scripts/passwordAuthentication.sh"
+=begin 
+    # TODO : Set persistent storage and find the way to attatch to drdb. 
     d.persistent_storage.enabled = true
     d.persistent_storage.location = "centosactivevd.vdi"
     d.persistent_storage.size = "#{drdb_persistent_storage}"
@@ -34,6 +36,7 @@ Vagrant.configure("2") do |config|
     d.persistent_storage.filesystem = 'ext4'
     d.persistent_storage.mountpoint = '/var/lib/jenkinsdata'
     d.persistent_storage.volgroupname = 'VolGroup00'
+=end    
     d.vm.provider "virtualbox" do |v|
       v.memory = 2048
     end
@@ -46,6 +49,7 @@ Vagrant.configure("2") do |config|
     d.vm.network "private_network" , ip: "10.100.199.30"
     d.vm.synced_folder "./resources", "/vagrant"
     d.vm.provision :shell, path: "scripts/passwordAuthentication.sh"
+=begin
     d.persistent_storage.enabled = true
     d.persistent_storage.location = "centospassivevd.vdi"
     d.persistent_storage.size = "#{drdb_persistent_storage}"
@@ -53,6 +57,7 @@ Vagrant.configure("2") do |config|
     d.persistent_storage.filesystem = 'ext4'
     d.persistent_storage.mountpoint = '/var/lib/jenkinsdata'
     d.persistent_storage.volgroupname = 'VolGroup00'
+=end
     d.vm.provider "virtualbox" do |v|
       v.memory = 2048
     end
