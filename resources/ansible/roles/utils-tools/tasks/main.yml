@@ -11,6 +11,7 @@
     - mod_ssl
     - net-tools
     - wget
+    - python-pip
   register: result
 
 - name: Update db

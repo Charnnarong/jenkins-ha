@@ -1,4 +1,35 @@
 ---
+- pip: name=pexpect version=4.2.1
+  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
+
+- name: No Key checking
+  copy: src=config dest=/root/.ssh/config owner=root group=root mode=0644
+  
+#-------- Prerequisite. Cluster nodes should access to each other without password.-----+
+
+- name: Configs cluster for passwordless to each other.
+  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
+  stat: path=/root/.ssh/id_dsa
+  register: st
+  
+- shell: ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ""
+  when: '("{{ ansible_hostname }}" == "{{ server_active }}") and (st.stat.exists == False)'
+
+
+- name: copy_public_key_to_authorized
+  when: '("{{ ansible_hostname }}" == "{{ server_active }}") and (st.stat.exists == False)'
+  shell: cp /root/.ssh/id_dsa.pub /root/.ssh/authorized_keys
+  
+- name: replicate_keys_to_passive
+  when: '("{{ ansible_hostname }}" == "{{ server_active }}") and (st.stat.exists == False)'
+  expect:
+    command: "scp -r /root/.ssh {{ server_passive }}:"
+    responses: 
+      'Are you sure you want to continue connecting' : "yes"
+      'password' : "vagrant"
+      
+
+#--------- Install software -----  
 
 - name: Install cluster-software-pack.
   yum: state=present name="{{ item }}"
