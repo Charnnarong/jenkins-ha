@@ -2,8 +2,11 @@
 - pip: name=pexpect version=4.2.1
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
 
+- name: Ensure directory create.
+  file: path=/root/.ssh state=directory mode=0755
+  
 - name: No Key checking
-  copy: src=config dest=/root/.ssh/config owner=root group=root mode=0644
+  copy: src=config dest=/root/.ssh/config owner=root group=root mode=1700
   
 #-------- Prerequisite. Cluster nodes should access to each other without password.-----+
 
@@ -11,7 +14,7 @@
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
   stat: path=/root/.ssh/id_dsa
   register: st
-  
+
 - shell: ssh-keygen -t dsa -f /root/.ssh/id_dsa -N ""
   when: '("{{ ansible_hostname }}" == "{{ server_active }}") and (st.stat.exists == False)'
 
@@ -79,5 +82,14 @@
 #--------- Configuration -----------
 
 - shell: pcs resource defaults resource-stickiness=100
+
+- name: Fixed pcs permission
+  shell: chmod 777 /var/lib/pacemaker/cores
+
+- shell: setsebool daemons_enable_cluster_mode=1
+
+#--------- Fixed ----------
+#Configuration file /usr/lib/systemd/system/xxxxxx is marked executable. Please remove executable permission bits. Proceeding anyway.
+
 
  

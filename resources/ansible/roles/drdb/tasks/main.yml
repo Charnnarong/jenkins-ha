@@ -1,27 +1,25 @@
 ---
-
-
+- name: Install Perl
+  yum: name=perl state=present
+  
 - name: install drdb84
   yum:
-#    name: http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/drbd84-utils-8.9.6-1.el7.elrepo.x86_64.rpm
-#    name: http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/drbd84-utils-8.9.2-1.el7.elrepo.x86_64.rpm
     name: http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/drbd84-utils-8.9.5-1.el7.elrepo.x86_64.rpm
     state: present
 
 - name: install kmod-drdb84
   yum:
-#    name: http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/kmod-drbd84-8.4.8-1_1.el7.elrepo.x86_64.rpm #(doens't work so well )
-#    name: http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/kmod-drbd84-8.4.8-1_2.el7.elrepo.x86_64.rpm #( require new kernel ) 
-    name: http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/kmod-drbd84-8.4.7-1_1.el7.elrepo.x86_64.rpm
+    name: http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/kmod-drbd84-8.4.8-1_1.el7.elrepo.x86_64.rpm
     state: present
-    
-#curl -o /usr/lib/ocf/resource.d/linbit/drbd 'http://git.linbit.com/gitweb.cgi?p=drbd-utils.git;a=blob_plain;f=scripts/ drbd.ocf;h=cf6b96634 1377a993d1bf5f585a5b9fe72eaa5f2;hb=c11ba026bbbbc647b8112543df142f2185cb4b4b'
+
+# Check resources for drdb84 utils from here http://git.linbit.com/
 - name: Patch drbd84-utils
   get_url:
-    url: http://git.linbit.com/gitweb.cgi?p=drbd-utils.git;a=blob_plain;f=scripts/ drbd.ocf;h=cf6b96634 1377a993d1bf5f585a5b9fe72eaa5f2;hb=c11ba026bbbbc647b8112543df142f2185cb4b4b
+    url: http://git.linbit.com/drbd-utils.git/blob_plain/5d50d9fb2a967d21c0f5746370ccc066d3a67f7d:/scripts/drbd.ocf
     dest: /usr/lib/ocf/resource.d/linbit/drbd
-    mode: 0755 # -rwxr-xr-x.
-
+    mode: '0755' # -rwxr-xr-x.
+    
+    
 #--- From here is not quite good ----    
 - name: Allocate a Disk Volume for DRDB
   shell: vgdisplay | grep "VG Name" | awk -v N=3 '{print $N}'
@@ -44,11 +42,20 @@
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
   
 - name: Waiting for synch data
+  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
   pause: seconds=30
+
+# Promote to primary
+- shell: drbdadm primary {{ drdb_resource_name }} 
+  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
+  
+- pause: seconds=5
+  when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
   
 - shell: mkfs.xfs {{ drdb_device }}
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
   ignore_errors: yes # contain an existing filesystem (xfs)
+  
   
 - shell: mount {{ drdb_device }} /mnt 
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
@@ -63,7 +70,7 @@
 - shell: umount {{ drdb_device }}
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
 
-#### Configure the Cluster for the DRBD device
+##### Configure the Cluster for the DRBD device
 
 - name: Configure the Cluster for the DRBD device
   shell: pcs cluster cib drbd_cfg
@@ -85,7 +92,7 @@
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
 
 - name: Waiting for pcs cluster cib-push drbd_cfg
-  pause: seconds=10
+  pause: seconds=20
          
 - name: Files are copied
   copy:
@@ -94,7 +101,7 @@
     mode: "{{ item.mode }}"
   with_items: "{{ files }}"         
  
-#### Configure the Cluster for the Filesystem
+##### Configure the Cluster for the Filesystem
 
 - shell: pcs cluster cib fs_cfg
   when: '"{{ ansible_hostname }}" == "{{ server_active }}"'
@@ -126,4 +133,5 @@
   
 - name: Waiting for pcs cluster cib-push fs_cfg
   pause: seconds=10
+    
     
