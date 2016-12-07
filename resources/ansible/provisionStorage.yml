@@ -1,10 +1,10 @@
 ---
 # This is the main playbook what ansible will use for provisoning. 
-- hosts: gateway-systems
+- hosts: storage-systems
   become: yes
   become_method: sudo
   serial: 1
   roles:
     - add-hosts
     - utils-tools
-    - gateway-software-pack
+#    - storage-software-pack

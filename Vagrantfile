@@ -1,6 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-required_plugins = %w(vagrant-vbguest)
+required_plugins = %w(vagrant-vbguest vagrant-persistent-storage)
 required_plugins.each do |plugin|
   system "vagrant plugin install #{plugin}" unless Vagrant.has_plugin? plugin
 end
@@ -8,9 +8,9 @@ end
 Vagrant.configure("2") do |config|
 
   # Docker Node
-  config.vm.define "centos-gateway" do |d|
+  config.vm.define "centos-storage" do |d|
     d.vm.box = "centos/7"
-    d.vm.hostname = "centos-gateway"
+    d.vm.hostname = "centos-storage"
     d.vm.network "private_network" , ip: "10.100.199.10"
     d.vm.synced_folder "./resources", "/vagrant"
     d.vm.provision :shell, path: "scripts/passwordAuthentication.sh"
@@ -72,8 +72,8 @@ Vagrant.configure("2") do |config|
     d.vm.synced_folder ".vagrant", "/vagrants/pk", mount_options: ["dmode=700,fmode=600"]
     d.vm.provision :shell, path: "scripts/bootstrap_ansible.sh"
 
-    playbooks = [["/vagrant/resources/ansible/provisionHaSystem.yml","/vagrant/resources/ansible/hosts/haSystems.yml"],
-                 ["/vagrant/resources/ansible/provisionGateway.yml","/vagrant/resources/ansible/hosts/gateway.yml"]]
+    playbooks = [["/vagrant/resources/ansible/provisionHaSystem.yml","/vagrant/resources/ansible/hosts/haSystems"],
+                 ["/vagrant/resources/ansible/provisionStorage.yml","/vagrant/resources/ansible/hosts/storage"]]
     playbooks.each { | (playbook,inventory) |
       d.vm.provision "ansible_local" do |ansible|
         ansible.playbook = "#{playbook}"
