@@ -13,14 +13,15 @@
     centos-passive: Authorized
 
 
-[ Slide 1 ] 
+![1](http://i.imgur.com/UjYODRK.png)
+
 
 <hr/>
 
     [vagrant@centos-active ~]$ sudo pcs cluster setup --start --name my_cluster centos-active centos-passive
     [vagrant@centos-active ~]$ sudo pcs cluster enable --all
 
-[ Slide 2 ]
+![2](http://i.imgur.com/bjg5DZL.png)
 
 <hr/>
 
@@ -37,7 +38,7 @@ For simplify this tutorial, we opt to disable "Shoot The Other Node In The Head"
 
 Over view of Active/Passive Apache HTTP Server
 
-[ Slide 3 ]
+![3](http://i.imgur.com/bavKGgG.png)
 
 <hr/>
 
@@ -59,7 +60,7 @@ Show logical volume
     
 All PV , VG and LV together are visualized as
 
-[ Slide 4 ] 
+![4](http://i.imgur.com/RVkNPGZ.png)
 
 
 Find out how much space we can use to create our brand new logical volume from existing volume group.
@@ -74,26 +75,149 @@ You are probably see something like this
 
 We are going to need storage attatched to it as follow
 
-[ Slide 5 ]
+![5](http://i.imgur.com/jc5WmCp.png)
+
+Instead of attatch /dev/sdb physically, we will do that through iscsi protocal.In short make physical disk appear to server as if it is a physical disk, but it actually located at somewhere else, here called Centos-Storage server that we are going to do next and pause what we have done for now, then we'll be back to this point once we finish with our iscsi service. 
+
+That is effectively means our Active node and Passive node are pointing at the same disk remotely. But only one is taking the disk in control at a time and will never be simultaneously accesses. 
+
+![6](http://i.imgur.com/cmnEyWp.png)
+
+<hr/> 
 
 Create iscsi (Pronounced **eye skuzzy**.)
 
+iSCSI target provides some storage (server),
 
+iSCSI initiator uses this available storage (client).
+
+Overview of iscsi architecture.
+
+![7](http://i.imgur.com/5IgG1pi.jpg)
+
+credit : http://www.tsmtutorials.com/2016/08/iscsi-architecture.html
+
+
+    [vagrant@centos-storage ~]$ sudo yum install -y targetcli
+    [vagrant@centos-storage ~]$ sudo systemctl enable target
+
+
+    [vagrant@centos-storage ~]$ sudo targetcli
+        Warning: Could not load preferences file /root/.targetcli/prefs.bin.
+        targetcli shell version 2.1.fb41
+        Copyright 2011-2013 by Datera, Inc and others.
+        For help on commands, type 'help'.
+        
+        />
+
+    /> backstores/fileio/ create shareddata /opt/shareddata.img 512M
+        Created fileio shareddata with size 268435456
+        
+create an IQN (Iscsi Qualified Name) called iqn.2016-12.com.centos-storage
+
+    /> iscsi/ create iqn.2016-12.com.centos-storage:t1
+        Created target iqn.2016-12.com.centos-storage:t1.
+        Created TPG 1.
+        Global pref auto_add_default_portal=true
+        Created default portal listening on all IPs (0.0.0.0), port 3260.
+
+    /> cd iscsi/iqn.2016-12.com.centos-storage:t1
+
+    /iscsi/iqn.20...os-storage:t1> ls
+        o- iqn.2016-12.com.centos-storage:t1 ..................................................................................... [TPGs: 1]
+          o- tpg1 ................................................................................................... [no-gen-acls, no-auth]
+            o- acls .............................................................................................................. [ACLs: 0]
+            o- luns .............................................................................................................. [LUNs: 0]
+            o- portals ........................................................................................................ [Portals: 1]
+              o- 0.0.0.0:3260 ......................................................................................................... [OK]
+
+    /iscsi/iqn.20...os-storage:t1> cd tpg1/   
+
+    /iscsi/iqn.20...orage:t1/tpg1> portals/ create
+        Using default IP port 3260
+        Binding to INADDR_ANY (0.0.0.0)
+        This NetworkPortal already exists in configFS          
+              
+
+    /iscsi/iqn.20...orage:t1/tpg1> luns/ create /backstores/fileio/shareddata
+        Created LUN 0.
+
+    /iscsi/iqn.20...orage:t1/tpg1> acls/ create iqn.2016-12.com.centos-storage:client
+        Created Node ACL for iqn.2016-12.com.centos-storage:client
+        Created mapped LUN 0.        
+
+    /iscsi/iqn.20...orage:t1/tpg1> cd acls/iqn.2016-12.com.centos-storage:client/
+    
+
+    /iscsi/iqn.20...torage:client> set auth userid=usr
+        Parameter userid is now 'usr'.
+
+    /iscsi/iqn.20...torage:client> set auth password=password1
+        Parameter password is now 'password1'.
+
+    /iscsi/iqn.20...torage:client>
+
+    /iscsi/iqn.20...torage:client> cd ../..
+
+    /iscsi/iqn.20...orage:t1/tpg1> ls
+        o- tpg1 ..................................................................................................... [no-gen-acls, no-auth]
+          o- acls ................................................................................................................ [ACLs: 1]
+          | o- iqn.2016-12.com.centos-storage:client ...................................................................... [Mapped LUNs: 1]
+          |   o- mapped_lun0 ................................................................................. [lun0 fileio/shareddata (rw)]
+          o- luns ................................................................................................................ [LUNs: 1]
+          | o- lun0 .............................................................................. [fileio/shareddata (/opt/shareddata.img)]
+          o- portals .......................................................................................................... [Portals: 1]
+            o- 0.0.0.0:3260 ........................................................................................................... [OK]
 Crate new physical volume for Cluster as if we are gonna use it later on.
 
     [vagrant@centos-active ~]$ sudo lsblk
-    NAME                         MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
-    sda                            8:0    0   40G  0 disk
-    |-sda1                         8:1    0    1M  0 part
-    |-sda2                         8:2    0  500M  0 part /boot
-    |-sda3                         8:3    0 39.5G  0 part
-      |-VolGroup00-LogVol00      253:0    0 37.7G  0 lvm  /
-      |-VolGroup00-LogVol01      253:1    0  1.5G  0 lvm  [SWAP]
-      |-VolGroup00-my_cluster_lv 253:2    0  256M  0 lvm
-    sdb                            8:16   0  512M  0 disk
+        NAME                         MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+        sda                            8:0    0   40G  0 disk
+        |-sda1                         8:1    0    1M  0 part
+        |-sda2                         8:2    0  500M  0 part /boot
+        |-sda3                         8:3    0 39.5G  0 part
+          |-VolGroup00-LogVol00      253:0    0 37.7G  0 lvm  /
+          |-VolGroup00-LogVol01      253:1    0  1.5G  0 lvm  [SWAP]
+          |-VolGroup00-my_cluster_lv 253:2    0  256M  0 lvm
+        sdb                            8:16   0  512M  0 disk
 
     [vagrant@centos-active ~]$ sudo pvcreate /dev/sdb
         Physical volume "/dev/sdb" successfully created
+
+
+    /iscsi/iqn.20...orage:t1/tpg1> exit
+        Global pref auto_save_on_exit=true
+        Last 10 configs saved in /etc/target/backup.
+        Configuration saved to /etc/target/saveconfig.json
+
+<hr/>
+
+iSCSI Initiator Configuration
+
+    [vagrant@centos-active ~]$ sudo yum install -y iscsi-initiator-utils
+
+    [vagrant@centos-active ~]$ cd /etc/iscsi
+
+    [vagrant@centos-active iscsi]$ sudo vi initiatorname.iscsi
+        InitiatorName=iqn.2016-12.com.centos-storage:client
+
+    [vagrant@centos-active iscsi]$ sudo vi iscsid.conf
+        node.session.auth.authmethod = CHAP
+        node.session.auth.username = usr
+        node.session.auth.password = password1
+
+    [vagrant@centos-active iscsi]$ sudo systemctl start iscsi
+
+    [vagrant@centos-active iscsi]$ sudo iscsiadm --mode discovery --type sendtargets --portal 10.100.199.10
+        10.100.199.10:3260,1 iqn.2016-12.com.centos-storage:t1
+
+    [vagrant@centos-active iscsi]$ sudo iscsiadm --mode node --targetname iqn.2016-12.com.centos-storage:t1 --portal 10.100.199.10 --login
+        Logging in to [iface: default, target: iqn.2016-12.com.centos-storage:t1, portal: 10.100.199.10,3260] (multiple)
+        Login to [iface: default, target: iqn.2016-12.com.centos-storage:t1, portal: 10.100.199.10,3260] successful.
+
+    [root@centos-active html]# lsblk --scsi
+
+    [root@centos-active html]# sudo iscsiadm -m session -P 3
 
 Creat Physical disk
 
@@ -249,13 +373,20 @@ Modified volume\_list to volume\_list = [ "VolGroup00" ]
 
     volume_list = [ "VolGroup00" ]
     
-Rebuild the i ni tramfs boot image to guarantee that the boot image will not try to activate a
+Rebuild the initramfs boot image to guarantee that the boot image will not try to activate a
 volume group controlled by the cluster.
 
     [root@centos-active vagrant]# dracut -H -f /boot/initramfs-$(uname -r).img $(uname -r)
     [root@centos-passive vagrant]# dracut -H -f /boot/initramfs-$(uname -r).img $(uname -r)
     
 Reboots both nodes
+
+
+**pcs** - pacemaker/corosync configuration system.
+
+It uses to control and configure pacemaker and corosync.
+Architecture: http://clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Clusters_from_Scratch/_pacemaker_architecture.html
+
 
     [vagrant@centos-active ~]$ sudo pcs cluster start
     [vagrant@centos-active ~]$ sudo pcs cluster start --all
@@ -315,7 +446,12 @@ and test your cluster again.
     [root@centos-active vagrant]# pcs status
     [root@centos-active vagrant]# pcs cluster unstandby centos-active
     
-        
 
+**Completed cluster part**
+<hr/>
+
+<br/>
+
+###Setup Jenkins
      
       
