@@ -12,7 +12,6 @@ Vagrant.configure("2") do |config|
     d.vm.box = "centos/7"
     d.vm.hostname = "centos-storage"
     d.vm.network "private_network" , ip: "10.100.199.10"
-    d.vm.synced_folder "./resources", "/vagrant"
     d.vm.provision :shell, path: "scripts/passwordAuthentication.sh"
     d.vm.provider "virtualbox" do |v|
       v.memory = 2048
@@ -25,7 +24,6 @@ Vagrant.configure("2") do |config|
     d.vm.box = "centos/7"
     d.vm.hostname = "centos-active"
     d.vm.network "private_network" , ip: "10.100.199.20"
-    d.vm.synced_folder "./resources", "/vagrant"
     d.vm.provision :shell, path: "scripts/passwordAuthentication.sh"
 =begin 
     # TODO : Set persistent storage and find the way to attatch to drdb. 
@@ -47,7 +45,6 @@ Vagrant.configure("2") do |config|
     d.vm.box = "centos/7"
     d.vm.hostname = "centos-passive"
     d.vm.network "private_network" , ip: "10.100.199.30"
-    d.vm.synced_folder "./resources", "/vagrant"
     d.vm.provision :shell, path: "scripts/passwordAuthentication.sh"
 =begin
     d.persistent_storage.enabled = true
@@ -71,6 +68,7 @@ Vagrant.configure("2") do |config|
     d.vm.synced_folder ".", "/vagrant", rsync__exclude: ".git/"
     d.vm.synced_folder ".vagrant", "/vagrants/pk", mount_options: ["dmode=700,fmode=600"]
     d.vm.provision :shell, path: "scripts/bootstrap_ansible.sh"
+    d.vm.provision :shell, inline: "ansible-playbook /vagrant/resources/ansible/provisionAnsibleAsset.yml -c local"
 
     playbooks = [["/vagrant/resources/ansible/provisionHaSystem.yml","/vagrant/resources/ansible/hosts/haSystems"],
                  ["/vagrant/resources/ansible/provisionStorage.yml","/vagrant/resources/ansible/hosts/storage"]]

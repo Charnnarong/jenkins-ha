@@ -1,0 +1,4 @@
+eap_home: /opt/{{ eap_version }}
+
+jboss_eap_user: vagrant
+jboss_eap_group: vagrant

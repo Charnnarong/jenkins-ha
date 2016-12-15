@@ -1,0 +1,44 @@
+---
+
+- stat: path=/tmp/{{ eap_filename }}
+  register: eapzip  
+ 
+  
+- name: copy Eap zip
+  when: eapzip.stat.exists == False
+  copy:
+    src: /vagrant/resources/files/{{ eap_filename }}
+    dest: /tmp/{{ eap_filename }}
+  become: true
+  become_user: vagrant
+
+- name: Create {{ eap_home }} directory
+  file: path="{{ eap_home }}" state=directory mode=0755
+
+- stat: path=/opt/{{ eap_version }}/jboss-eap-7.0
+  register: eap_installed 
+      
+- name: ZIP | Extract JBoss EAP zip file to {{ eap_home }}
+  when: eap_installed.stat.exists == False
+  
+  unarchive:
+    src: /tmp/{{ eap_filename }}
+    dest: "{{ eap_home }}"
+    copy: no
+#    creates: "{{ jboss_eap_jboss_home }}/version.txt"
+    owner: "{{ jboss_eap_user }}"
+    group: "{{ jboss_eap_group }}"
+    mode: 0755
+  register: jboss_install
+
+- name: Set JBOSS_HOME 
+  lineinfile:
+    dest: /home/vagrant/.bash_profile
+    line: export JBOSS_HOME="/opt/{{ eap_version }}/jboss-eap-7.0"
+    state: present
+
+  
+
+
+
+  

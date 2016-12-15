@@ -12,6 +12,7 @@
     - net-tools
     - wget
     - python-pip
+    - unzip
   register: result
 
 - name: Update db

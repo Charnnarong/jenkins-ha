@@ -2,12 +2,11 @@
 
 - stat: path=/tmp/{{ oracle_jdk_rpm_download_filename }}
   register: jdk_rpm
-  
-- name: download oracle-jdk rpm
+    
+- name: copy oracle-jdk rpm
   when: jdk_rpm.stat.exists == False
-  get_url:
-    url: "{{ oracle_jdk_rpm_download_source_url }}"
-    headers: 'Cookie:oraclelicense=accept-securebackup-cookie'
+  copy:
+    src: /tmp/{{ oracle_jdk_rpm_download_filename }}
     dest: /tmp/{{ oracle_jdk_rpm_download_filename }}
 
 - name: install oracle-jdk
@@ -20,3 +19,5 @@
     name: java
     path: /usr/java/jdk1.{{ oracle_jdk_version }}.0_{{ oracle_jdk_update }}/bin/java
     link: /usr/bin/java
+    
+ 

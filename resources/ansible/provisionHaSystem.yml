@@ -7,8 +7,9 @@
   roles:
     - add-hosts
     - utils-tools
-#    - jdk-8
+    - jdk-8
     - cluster-software-pack
+    - eap
 #    - httpd-server-cluster
 #    - drdb
 #    - jenkins # TODO Standard Install 

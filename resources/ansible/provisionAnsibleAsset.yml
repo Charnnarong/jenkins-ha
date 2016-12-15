@@ -1,0 +1,19 @@
+---
+# This is the main playbook what ansible will use for provisoning. 
+- hosts: localhost
+  become: yes
+  become_method: sudo
+  serial: 1
+  tasks:
+  
+  - stat: path=/tmp/{{ oracle_jdk_rpm_download_filename }}
+    register: jdk_rpm
+  
+  - name: download oracle-jdk rpm
+    when: jdk_rpm.stat.exists == False
+    get_url:
+      url: "{{ oracle_jdk_rpm_download_source_url }}"
+      headers: 'Cookie:oraclelicense=accept-securebackup-cookie'
+      dest: /tmp/{{ oracle_jdk_rpm_download_filename }}
+      
+      
